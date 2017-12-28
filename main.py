@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QAction, QFileDialog, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QShortcut)
+from PyQt5.QtWidgets import (QMainWindow, QWidget, QAction, QFileDialog, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QShortcut, QSpinBox)
 from PyQt5.QtGui import QPixmap, QKeySequence
 from PyQt5 import QtCore
 
@@ -17,8 +17,14 @@ class ControlsWidget(QWidget):
         previousImageBtn = QPushButton('Previous Image', self)
         previousImageBtn.clicked.connect(self.parent.previousImage)
 
+        self.operatorSpin = QSpinBox(self)
+        self.operatorSpin.setMinimum(1)
+        self.operatorSpin.setMaximum(1000)
+
         vbox.addWidget(nextImageBtn)
+        vbox.addWidget(self.operatorSpin)
         vbox.addWidget(previousImageBtn)
+        vbox.addStretch()
 
         self.setLayout(vbox)
 
@@ -52,10 +58,10 @@ class ImageWidget(QWidget):
             self.imageIndex = localIndex
 
     def nextImage(self):
-        self.goToImage(1)
+        self.goToImage(self.controlsWidget.operatorSpin.value())
 
     def previousImage(self):
-        self.goToImage(-1)
+        self.goToImage(self.controlsWidget.operatorSpin.value() * -1)
 
     def setImageList(self, imageList):
         self.imageList = imageList
