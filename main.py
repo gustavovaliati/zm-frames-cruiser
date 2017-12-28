@@ -31,6 +31,7 @@ class ControlsWidget(QWidget):
 class ImageWidget(QWidget):
     def __init__(self, parent):
         super(ImageWidget, self).__init__(parent)
+        self.parent = parent
         self.imageIndex = -1
         self.initUI()
 
@@ -50,6 +51,8 @@ class ImageWidget(QWidget):
     def loadImage(self, index):
         self.pixmap.load(self.imageList[index])
         self.lbl.setPixmap(self.pixmap)
+        statusBarMessage = '[{}/{}] {}'.format(index+1, self.imageListLength+1, self.imageList[index])
+        self.parent.statusBar().showMessage(statusBarMessage)
 
     def goToImage(self, operator):
         localIndex = self.imageIndex + operator
