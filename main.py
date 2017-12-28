@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QAction, QFileDialog, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QShortcut, QSpinBox)
+from PyQt5.QtWidgets import (QMainWindow, QWidget, QAction, QFileDialog, QApplication, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QShortcut, QSpinBox, QFrame)
 from PyQt5.QtGui import QPixmap, QKeySequence
 from PyQt5 import QtCore
 
@@ -12,21 +12,45 @@ class ControlsWidget(QWidget):
 
     def initUI(self):
         vbox = QVBoxLayout(self)
-        nextImageBtn = QPushButton('Next Image', self)
+
+
+
+        nextImageBtn = QPushButton('Next >>', self)
+        nextImageBtn.setToolTip('Jump to the next frame.')
         nextImageBtn.clicked.connect(self.parent.nextImage)
-        previousImageBtn = QPushButton('Previous Image', self)
+
+        previousImageBtn = QPushButton('<< Previous', self)
+        previousImageBtn.setToolTip('Jump to the previous frame.')
         previousImageBtn.clicked.connect(self.parent.previousImage)
 
+        gotToBtn = QPushButton('Go to', self)
+        gotToBtn.setToolTip('Jump to the specified frame.')
+        gotToBtn.clicked.connect(self.goToAction)
+
+        hLine = QFrame()
+        hLine.setFrameShape(QFrame.HLine)
+        hLine.setFrameShadow(QFrame.Sunken)
+
         self.operatorSpin = QSpinBox(self)
+        self.operatorSpin.setToolTip('The number of frames to pass through on a single jump.')
         self.operatorSpin.setMinimum(1)
         self.operatorSpin.setMaximum(1000)
 
-        vbox.addWidget(nextImageBtn)
+        self.gotToSpin = QSpinBox(self)
+        self.gotToSpin.setToolTip('The frame to jump in.')
+
         vbox.addWidget(self.operatorSpin)
+        vbox.addWidget(nextImageBtn)
         vbox.addWidget(previousImageBtn)
+        vbox.addWidget(hLine)
+        vbox.addWidget(self.gotToSpin)
+        vbox.addWidget(gotToBtn)
         vbox.addStretch()
 
         self.setLayout(vbox)
+
+    def goToAction(self):
+        self.parent.goToImage(self.gotToSpin.value() - 1)
 
 class ImageWidget(QWidget):
     def __init__(self, parent):
@@ -51,27 +75,32 @@ class ImageWidget(QWidget):
     def loadImage(self, index):
         self.pixmap.load(self.imageList[index])
         self.lbl.setPixmap(self.pixmap)
-        statusBarMessage = '[{}/{}] {}'.format(index+1, self.imageListLength+1, self.imageList[index])
+        statusBarMessage = '[{}/{}] {}'.format(index+1, self.imageListLength, self.imageList[index])
         self.parent.statusBar().showMessage(statusBarMessage)
 
-    def goToImage(self, operator):
-        localIndex = self.imageIndex + operator
+    def goToImage(self, localIndex):
         if localIndex >= 0 and localIndex < self.imageListLength:
             self.loadImage(localIndex)
             self.imageIndex = localIndex
 
+    def slideToImage(self, operator):
+        localIndex = self.imageIndex + operator
+        self.goToImage(localIndex)
+
     def nextImage(self):
-        self.goToImage(self.controlsWidget.operatorSpin.value())
+        self.slideToImage(self.controlsWidget.operatorSpin.value())
 
     def previousImage(self):
-        self.goToImage(self.controlsWidget.operatorSpin.value() * -1)
+        self.slideToImage(self.controlsWidget.operatorSpin.value() * -1)
 
     def setImageList(self, imageList):
         self.imageList = imageList
         self.imageList.sort()
         self.imageListLength = len(self.imageList)
         print("Found {} jpg images.".format(self.imageListLength))
-        self.loadImage(0)
+        self.controlsWidget.gotToSpin.setMinimum(1)
+        self.controlsWidget.gotToSpin.setMaximum(self.imageListLength)
+        self.goToImage(0)
 
 class MainWindow(QMainWindow):
 
